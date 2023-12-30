@@ -5,6 +5,7 @@ import com.example.flight_search_api.service.FlightService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -20,6 +21,7 @@ public class FlightController {
         this.flightService = flightService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/add")
     public ResponseEntity<Flight> createFlight(@RequestBody Flight flight) {
         Flight createdFlight = flightService.createFlight(flight);
@@ -32,12 +34,14 @@ public class FlightController {
         return ResponseEntity.ok(flight);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/update/{id}")
     public ResponseEntity<Flight> updateFlight(@PathVariable Long id, @RequestBody Flight flightDetails) {
         Flight updatedFlight = flightService.updateFlight(id, flightDetails);
         return ResponseEntity.ok(updatedFlight);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteFlight(@PathVariable Long id) {
         flightService.deleteFlight(id);

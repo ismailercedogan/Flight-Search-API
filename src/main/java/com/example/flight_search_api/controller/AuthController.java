@@ -3,6 +3,7 @@ package com.example.flight_search_api.controller;
 import com.example.flight_search_api.Dto.JwtResponse;
 import com.example.flight_search_api.Dto.LoginDto;
 import com.example.flight_search_api.Dto.SignUpDto;
+import com.example.flight_search_api.model.Role;
 import com.example.flight_search_api.model.User;
 import com.example.flight_search_api.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.example.flight_search_api.util.JwtUtil;
+import com.example.flight_search_api.repository.RoleRepository;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,14 +27,17 @@ public class AuthController {
 
     private final UserRepository userRepository;
 
+    private final RoleRepository roleRepository;
+
 
     private final PasswordEncoder passwordEncoder;
 
     private final JwtUtil jwtUtil;
 
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -44,10 +49,9 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Cast Authentication to UserDetails
+
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        // Generate JWT token
         String jwt = jwtUtil.generateToken(userDetails);
 
         return ResponseEntity.ok(new JwtResponse(jwt));
@@ -56,20 +60,21 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignUpDto signUpDto){
 
-        // add check for username exists in a DB
         if(userRepository.existsByUsername(signUpDto.getUsername())){
             return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
         }
 
-        // create user object
         User user = new User();
         user.setUsername(signUpDto.getUsername());
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
 
+        Role role = roleRepository.findByName(signUpDto.getRole()).orElseThrow(() -> new IllegalArgumentException("Invalid role name"));
+        user.setRole(role);
+
         userRepository.save(user);
 
         return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
-
     }
+
 }
 
