@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -43,5 +44,14 @@ public class FlightService {
 
     public List<Flight> getAllFlights() {
         return flightRepository.findAll();
+    }
+    public List<Flight> searchOneWayFlights(String departure, String arrival, Date departureDate) {
+        return flightRepository.findByDepartureAirportCityAndArrivalAirportCityAndDepartureDateTime(
+                departure, arrival, departureDate);
+    }
+
+    public List<Flight> searchRoundTripFlights(String departure, String arrival, Date departureDate, Date returnDate) {
+        return flightRepository.findByDepartureAirportCityAndArrivalAirportCityAndDepartureDateTimeAndReturnDateTime(
+                departure, arrival, departureDate, returnDate);
     }
 }

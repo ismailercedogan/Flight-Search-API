@@ -2,10 +2,12 @@ package com.example.flight_search_api.controller;
 
 import com.example.flight_search_api.model.Flight;
 import com.example.flight_search_api.service.FlightService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -46,6 +48,25 @@ public class FlightController {
     public ResponseEntity<List<Flight>> getAllFlights() {
         List<Flight> flights = flightService.getAllFlights();
         return ResponseEntity.ok(flights);
+    }
+    @GetMapping("/search")
+    public ResponseEntity<List<Flight>> searchFlights(
+            @RequestParam String departure,
+            @RequestParam String arrival,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date departureDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date returnDate) {
+
+        if (departure == null || arrival == null || departureDate == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (returnDate == null) {
+            List<Flight> oneWayFlights = flightService.searchOneWayFlights(departure, arrival, departureDate);
+            return ResponseEntity.ok(oneWayFlights);
+        } else {
+            List<Flight> roundTripFlights = flightService.searchRoundTripFlights(departure, arrival, departureDate, returnDate);
+            return ResponseEntity.ok(roundTripFlights);
+        }
     }
 }
 
