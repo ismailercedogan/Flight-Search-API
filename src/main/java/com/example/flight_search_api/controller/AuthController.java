@@ -22,36 +22,28 @@ import com.example.flight_search_api.repository.RoleRepository;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
 
-    private final UserRepository userRepository;
-
-    private final RoleRepository roleRepository;
-
-
-    private final PasswordEncoder passwordEncoder;
-
-    private final JwtUtil jwtUtil;
-
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
-        this.authenticationManager = authenticationManager;
+    public AuthController(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.authenticationManager = authenticationManager;
     }
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDto loginDto){
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginDto.getUsername(), loginDto.getPassword()));
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
         String jwt = jwtUtil.generateToken(userDetails);
 
         return ResponseEntity.ok(new JwtResponse(jwt));
@@ -59,8 +51,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignUpDto signUpDto){
-
-        if(userRepository.existsByUsername(signUpDto.getUsername())){
+        if (userRepository.existsByUsername(signUpDto.getUsername())) {
             return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
         }
 
@@ -75,6 +66,5 @@ public class AuthController {
 
         return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
     }
-
 }
 
