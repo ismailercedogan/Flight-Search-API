@@ -3,7 +3,7 @@ package com.example.flight_search_api.model;
 
 import jakarta.persistence.*;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 public class Flight {
@@ -18,8 +18,8 @@ public class Flight {
     @JoinColumn(name = "arrival_airport_id")
     private Airport arrivalAirport;
 
-    private Date departureDateTime;
-    private Date returnDateTime;
+    private LocalDateTime departureDateTime;
+    private LocalDateTime returnDateTime;
     private double price;
 
     public long getId() {
@@ -46,19 +46,19 @@ public class Flight {
         this.arrivalAirport = arrivalAirport;
     }
 
-    public Date getDepartureDateTime() {
+    public LocalDateTime getDepartureDateTime() {
         return departureDateTime;
     }
 
-    public void setDepartureDateTime(Date departureDateTime) {
+    public void setDepartureDateTime(LocalDateTime departureDateTime) {
         this.departureDateTime = departureDateTime;
     }
 
-    public Date getReturnDateTime() {
+    public LocalDateTime getReturnDateTime() {
         return returnDateTime;
     }
 
-    public void setReturnDateTime(Date returnDateTime) {
+    public void setReturnDateTime(LocalDateTime returnDateTime) {
         this.returnDateTime = returnDateTime;
     }
 

@@ -4,6 +4,9 @@ import com.example.flight_search_api.model.Airport;
 import com.example.flight_search_api.model.Flight;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,7 +23,7 @@ public class FlightDataFetcherService {
         this.airportService = airportService;
     }
 
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 0 1 * * ?")
     public void fetchFlightData() {
         List<Flight> fetchedFlights = simulateFetchingFlightData();
         for (Flight flight : fetchedFlights) {
@@ -38,6 +41,7 @@ public class FlightDataFetcherService {
         List<Flight> flights = new ArrayList<>();
         String[] airports = {"JFK", "ANK", "IST", "ORD", "ATL", "DNZ", "SAW", "MIL", "MDR", "BRC"};
         Random random = new Random();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
 
         for (int i = 0; i < 10; i++) {
             Flight flight = new Flight();
@@ -53,8 +57,12 @@ public class FlightDataFetcherService {
             } while (arrivalAirport.getCity().equals(departureAirport.getCity()));
             flight.setArrivalAirport(arrivalAirport);
 
-            flight.setDepartureDateTime(new Date());
-            flight.setReturnDateTime(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24))); // Next day
+
+            LocalDateTime departureTime = LocalDateTime.now();
+            LocalDateTime returnTime = departureTime.plusDays(1);
+
+            flight.setDepartureDateTime(departureTime);
+            flight.setReturnDateTime(returnTime);
             flight.setPrice(100 + random.nextDouble() * 900);
 
             flights.add(flight);

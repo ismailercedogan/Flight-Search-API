@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -57,19 +59,28 @@ public class FlightController {
     public ResponseEntity<List<Flight>> searchFlights(
             @RequestParam String departureCity,
             @RequestParam String arrivalCity,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date departureDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date returnDate) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd-HH") String departureDateTime,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd-HH") String returnDateTime) {
 
-        if (departureCity == null || arrivalCity == null || departureDate == null) {
-            return ResponseEntity.badRequest().build();
-        }
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH");
 
-        if (returnDate == null) {
-            List<Flight> oneWayFlights = flightService.searchOneWayFlights(departureCity, arrivalCity, departureDate);
-            return ResponseEntity.ok(oneWayFlights);
-        } else {
-            List<Flight> roundTripFlights = flightService.searchRoundTripFlights(departureCity, arrivalCity, departureDate, returnDate);
-            return ResponseEntity.ok(roundTripFlights);
+            Date departureDate = formatter.parse(departureDateTime);
+            Date returnDate = (returnDateTime != null && !returnDateTime.isEmpty()) ? formatter.parse(returnDateTime) : null;
+
+            if (departureCity == null || arrivalCity == null || departureDate == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            if (returnDate == null) {
+                List<Flight> oneWayFlights = flightService.searchOneWayFlights(departureCity, arrivalCity, departureDate);
+                return ResponseEntity.ok(oneWayFlights);
+            } else {
+                List<Flight> roundTripFlights = flightService.searchRoundTripFlights(departureCity, arrivalCity, departureDate, returnDate);
+                return ResponseEntity.ok(roundTripFlights);
+            }
+        } catch (ParseException e) {
+            return ResponseEntity.badRequest().body(null);
         }
     }
 }

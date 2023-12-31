@@ -7,7 +7,12 @@ import com.example.flight_search_api.repository.FlightRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
@@ -17,6 +22,8 @@ public class FlightService {
     private final FlightRepository flightRepository;
     private final AirportRepository airportRepository;
     private final AirportService airportService;
+
+    private static final Logger logger = LoggerFactory.getLogger(FlightService.class);
 
     @Autowired
     public FlightService(FlightRepository flightRepository, AirportRepository airportRepository, AirportService airportService) {
@@ -58,17 +65,29 @@ public class FlightService {
         return flightRepository.findAll();
     }
     public List<Flight> searchOneWayFlights(String departureCity, String arrivalCity, Date departureDate) {
-        List<Airport> departureAirports = airportService.findAirportsByCity(departureCity);
-        List<Airport> arrivalAirports = airportService.findAirportsByCity(arrivalCity);
-        return flightRepository.findByDepartureAirportInAndArrivalAirportInAndDepartureDateTime(
-                departureAirports, arrivalAirports, departureDate);
+        LocalDateTime departureDateTime = convertToDateHour(departureDate);
+        LocalDateTime startOfHour = departureDateTime.truncatedTo(ChronoUnit.HOURS);
+        LocalDateTime endOfHour = startOfHour.plusHours(1).minusNanos(1);
+
+        return flightRepository.findByDepartureAirportCityAndArrivalAirportCityAndDepartureDateTimeBetween(
+                departureCity, arrivalCity, startOfHour, endOfHour);
     }
 
     public List<Flight> searchRoundTripFlights(String departureCity, String arrivalCity, Date departureDate, Date returnDate) {
-        List<Airport> departureAirports = airportService.findAirportsByCity(departureCity);
-        List<Airport> arrivalAirports = airportService.findAirportsByCity(arrivalCity);
+        LocalDateTime departureDateTime = convertToDateHour(departureDate);
+        LocalDateTime returnDateTime = convertToDateHour(returnDate);
+        LocalDateTime startOfDepartureHour = departureDateTime.truncatedTo(ChronoUnit.HOURS);
+        LocalDateTime endOfDepartureHour = startOfDepartureHour.plusHours(1).minusNanos(1);
+        LocalDateTime startOfReturnHour = returnDateTime.truncatedTo(ChronoUnit.HOURS);
+        LocalDateTime endOfReturnHour = startOfReturnHour.plusHours(1).minusNanos(1);
 
-        return flightRepository.findByDepartureAirportInAndArrivalAirportInAndDepartureDateTimeAndReturnDateTime(
-                departureAirports, arrivalAirports, departureDate, returnDate);
+        return flightRepository.findByDepartureAirportCityAndArrivalAirportCityAndDepartureDateTimeBetweenAndReturnDateTimeBetween(
+                departureCity, arrivalCity, startOfDepartureHour, endOfDepartureHour, startOfReturnHour, endOfReturnHour);
+    }
+
+    private LocalDateTime convertToDateHour(Date date) {
+        return date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
     }
 }
