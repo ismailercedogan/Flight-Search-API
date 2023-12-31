@@ -42,4 +42,23 @@ public class AirportService {
     public List<Airport> getAllAirports() {
         return airportRepository.findAll();
     }
+
+    public Airport findOrCreateAirport(String city) {
+        List<Airport> existingAirports = airportRepository.findByCity(city);
+        if (existingAirports.isEmpty()) {
+            Airport newAirport = new Airport();
+            newAirport.setCity(city);
+            return airportRepository.save(newAirport);
+        } else {
+
+            return existingAirports.get(0);
+
+    }
+    }
+
+    public List<Airport> findAirportsByCity(String city) {
+        return airportRepository.findByCity(city);
+    }
+
+
 }

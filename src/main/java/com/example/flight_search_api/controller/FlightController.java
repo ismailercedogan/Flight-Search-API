@@ -55,20 +55,20 @@ public class FlightController {
     }
     @GetMapping("/search")
     public ResponseEntity<List<Flight>> searchFlights(
-            @RequestParam String departure,
-            @RequestParam String arrival,
+            @RequestParam String departureCity,
+            @RequestParam String arrivalCity,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date departureDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date returnDate) {
 
-        if (departure == null || arrival == null || departureDate == null) {
+        if (departureCity == null || arrivalCity == null || departureDate == null) {
             return ResponseEntity.badRequest().build();
         }
 
         if (returnDate == null) {
-            List<Flight> oneWayFlights = flightService.searchOneWayFlights(departure, arrival, departureDate);
+            List<Flight> oneWayFlights = flightService.searchOneWayFlights(departureCity, arrivalCity, departureDate);
             return ResponseEntity.ok(oneWayFlights);
         } else {
-            List<Flight> roundTripFlights = flightService.searchRoundTripFlights(departure, arrival, departureDate, returnDate);
+            List<Flight> roundTripFlights = flightService.searchRoundTripFlights(departureCity, arrivalCity, departureDate, returnDate);
             return ResponseEntity.ok(roundTripFlights);
         }
     }

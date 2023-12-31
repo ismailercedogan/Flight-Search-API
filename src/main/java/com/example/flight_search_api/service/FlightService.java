@@ -1,6 +1,8 @@
 package com.example.flight_search_api.service;
 
+import com.example.flight_search_api.model.Airport;
 import com.example.flight_search_api.model.Flight;
+import com.example.flight_search_api.repository.AirportRepository;
 import com.example.flight_search_api.repository.FlightRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +15,23 @@ import java.util.List;
 public class FlightService {
 
     private final FlightRepository flightRepository;
+    private final AirportRepository airportRepository;
+    private final AirportService airportService;
 
     @Autowired
-    public FlightService(FlightRepository flightRepository) {
+    public FlightService(FlightRepository flightRepository, AirportRepository airportRepository, AirportService airportService) {
         this.flightRepository = flightRepository;
+        this.airportRepository = airportRepository;
+        this.airportService = airportService;
     }
 
     public Flight createFlight(Flight flight) {
+        if (flight.getDepartureAirport() != null && flight.getDepartureAirport().getId() == 0) {
+            airportRepository.save(flight.getDepartureAirport());
+        }
+        if (flight.getArrivalAirport() != null && flight.getArrivalAirport().getId() == 0) {
+            airportRepository.save(flight.getArrivalAirport());
+        }
         return flightRepository.save(flight);
     }
 
@@ -45,13 +57,18 @@ public class FlightService {
     public List<Flight> getAllFlights() {
         return flightRepository.findAll();
     }
-    public List<Flight> searchOneWayFlights(String departure, String arrival, Date departureDate) {
-        return flightRepository.findByDepartureAirportCityAndArrivalAirportCityAndDepartureDateTime(
-                departure, arrival, departureDate);
+    public List<Flight> searchOneWayFlights(String departureCity, String arrivalCity, Date departureDate) {
+        List<Airport> departureAirports = airportService.findAirportsByCity(departureCity);
+        List<Airport> arrivalAirports = airportService.findAirportsByCity(arrivalCity);
+        return flightRepository.findByDepartureAirportInAndArrivalAirportInAndDepartureDateTime(
+                departureAirports, arrivalAirports, departureDate);
     }
 
-    public List<Flight> searchRoundTripFlights(String departure, String arrival, Date departureDate, Date returnDate) {
-        return flightRepository.findByDepartureAirportCityAndArrivalAirportCityAndDepartureDateTimeAndReturnDateTime(
-                departure, arrival, departureDate, returnDate);
+    public List<Flight> searchRoundTripFlights(String departureCity, String arrivalCity, Date departureDate, Date returnDate) {
+        List<Airport> departureAirports = airportService.findAirportsByCity(departureCity);
+        List<Airport> arrivalAirports = airportService.findAirportsByCity(arrivalCity);
+
+        return flightRepository.findByDepartureAirportInAndArrivalAirportInAndDepartureDateTimeAndReturnDateTime(
+                departureAirports, arrivalAirports, departureDate, returnDate);
     }
 }
